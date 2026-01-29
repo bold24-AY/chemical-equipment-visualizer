@@ -292,8 +292,8 @@ If validation fails, you'll receive a clear error message.
 
 For testing purposes:
 
-**Username:** `admin`  
-**Password:** `admin`
+**Username:** `trial12`  
+**Password:** `trial@1234`
 
 Create additional users via Django admin panel at `http://127.0.0.1:8000/admin/`
 
