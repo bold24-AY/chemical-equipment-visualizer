@@ -34,8 +34,8 @@ python main.py
 ✅ Desktop app launches
 
 ## 🔐 Login Credentials
-- Username: `admin`
-- Password: `admin`
+- Username: `trial12`
+- Password: `trial@1234`
 
 ## 📄 Test CSV
 Use the included `sample_equipment_data.csv` file to test uploads.
