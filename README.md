@@ -116,8 +116,8 @@ python manage.py migrate
 
 # Create superuser (for Django admin)
 python manage.py createsuperuser
-# Username: admin
-# Password: admin (or your choice)
+# Username: trial12
+# Password: Trial@1234 (or your choice)
 
 # Start development server
 python manage.py runserver
@@ -159,7 +159,7 @@ python main.py
 
 1. **Login**
    - Navigate to `http://localhost:3000`
-   - Enter credentials (default: `admin` / `admin`)
+   - Enter credentials (default: `trial12` / `Trial@1234`)
    - Click "Login"
 
 2. **Upload CSV**
@@ -226,7 +226,7 @@ python main.py
 # Login
 curl -X POST http://127.0.0.1:8000/api/login/ \
   -H "Content-Type: application/json" \
-  -d '{"username": "admin", "password": "admin"}'
+  -d '{"username": "trial12", "password": "Trial@1234"}'
 
 # Upload CSV
 curl -X POST http://127.0.0.1:8000/api/upload/ \
@@ -292,8 +292,8 @@ If validation fails, you'll receive a clear error message.
 
 For testing purposes:
 
-**Username:** `trial12`  
-**Password:** `trial@1234`
+**Username:** `trial12`
+**Password:** `Trial@1234`
 
 Create additional users via Django admin panel at `http://127.0.0.1:8000/admin/`
 
@@ -475,7 +475,7 @@ python -m venv venv
 source venv/bin/activate  # or venv\Scripts\activate on Windows
 pip install -r requirements.txt
 python manage.py migrate
-python manage.py createsuperuser  # Create admin/admin
+python manage.py createsuperuser  # Create trial12/Trial@1234
 python manage.py runserver
 
 # Terminal 2: Start Web Frontend

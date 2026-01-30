@@ -50,7 +50,7 @@ class LoginDialog(QDialog):
         layout.addRow(buttons)
         
         # Demo credentials hint
-        hint = QLabel("Demo: admin / admin")
+        hint = QLabel("Demo: trial12 / Trial@1234")
         hint.setStyleSheet("color: #666; font-size: 11px; margin-top: 10px;")
         hint.setAlignment(Qt.AlignCenter)
         layout.addRow(hint)
