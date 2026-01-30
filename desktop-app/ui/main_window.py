@@ -5,8 +5,8 @@ from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                              QTabWidget, QPushButton, QLabel, QMessageBox,
                              QDialog, QLineEdit, QFormLayout, QDialogButtonBox,
                              QFileDialog, QStatusBar, QTableWidget, QTableWidgetItem,
-                             QHeaderView, QScrollArea, QSizePolicy)
-from PyQt5.QtCore import Qt, QSize
+                             QHeaderView, QScrollArea, QSizePolicy, QGraphicsOpacityEffect)
+from PyQt5.QtCore import Qt, QSize, QPropertyAnimation, QEasingCurve, QTimer
 from PyQt5.QtGui import QIcon
 
 from .upload_widget import UploadWidget
@@ -66,6 +66,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.api_client = api_client
         self.current_dataset = None
+        self.animations_enabled = True
         self.init_ui()
     
     def init_ui(self):
@@ -89,20 +90,24 @@ class MainWindow(QMainWindow):
             QTabWidget::pane {
                 border: 1px solid #e0e6ed;
                 background: white;
+                border-top: 2px solid #e0e6ed; /* Consistent border */
             }
             QTabBar::tab {
-                background: #f5f7fa;
+                background: transparent;
                 color: #666;
-                padding: 10px 20px;
-                margin-right: 2px;
+                padding: 12px 24px;
+                margin: 0;
+                border-bottom: 3px solid transparent;
+                font-size: 14px;
             }
             QTabBar::tab:selected {
-                background: white;
                 color: #1a5490;
                 font-weight: bold;
+                border-bottom: 3px solid #1a5490;
+                background-color: white;
             }
             QTabBar::tab:hover {
-                background: #e8eef5;
+                background-color: #f8fafc;
             }
         """)
         
@@ -112,8 +117,8 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.upload_widget, "📤 Upload")
         
         # Dashboard tab
-        dashboard_widget = self.create_dashboard()
-        self.tabs.addTab(dashboard_widget, "📊 Dashboard")
+        self.dashboard_widget = self.create_dashboard()
+        self.tabs.addTab(self.dashboard_widget, "📊 Dashboard")
         
         # History tab
         self.history_widget = self.create_history_tab()
@@ -131,7 +136,8 @@ class MainWindow(QMainWindow):
         # Apply global stylesheet
         self.setStyleSheet("""
             QMainWindow {
-                background-color: #f5f7fa;
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                          stop:0 #f5f7fa, stop:1 #eef1f5);
             }
             QPushButton {
                 padding: 8px 16px;
@@ -144,6 +150,7 @@ class MainWindow(QMainWindow):
                 border-radius: 5px;
                 margin-top: 10px;
                 padding-top: 10px;
+                background-color: white;
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
@@ -154,20 +161,43 @@ class MainWindow(QMainWindow):
                 border: none;
                 background-color: transparent;
             }
+            QStatusBar {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                                          stop:0 #0f3d6e, stop:1 #1a5490);
+                color: rgba(255, 255, 255, 0.8);
+                padding: 5px;
+            }
         """)
     
     def create_header(self):
         """Create application header."""
         header = QWidget()
+        header.setObjectName("header")
+        # Using border-image to cover the widget
+        # Assuming run from desktop-app directory or assets in CWD/assets
         header.setStyleSheet("""
-            QWidget {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                                          stop:0 #1a5490, stop:1 #2e7fc9);
-                padding: 15px;
+            QWidget#header {
+                border-image: url(assets/her1.jpeg) 0 0 0 0 stretch stretch;
             }
         """)
         
-        layout = QHBoxLayout()
+        header_layout = QVBoxLayout(header)
+        header_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Overlay widget for darkening
+        overlay = QWidget()
+        overlay.setStyleSheet("""
+            QWidget {
+                background-color: rgba(26, 84, 144, 0.85); 
+            }
+            QLabel {
+                background-color: transparent;
+            }
+        """)
+        header_layout.addWidget(overlay)
+        
+        layout = QHBoxLayout(overlay)
+        layout.setContentsMargins(15, 15, 15, 15)
         
         # Title
         title = QLabel("🧪 Chemical Equipment Visualizer")
@@ -176,12 +206,15 @@ class MainWindow(QMainWindow):
         
         layout.addStretch()
         
+
+        
         # Refresh button
         refresh_btn = QPushButton("🔄 Refresh")
         refresh_btn.setStyleSheet("""
             QPushButton {
                 background-color: white;
                 color: #1a5490;
+                border: none;
             }
             QPushButton:hover {
                 background-color: #e8eef5;
@@ -196,6 +229,7 @@ class MainWindow(QMainWindow):
             QPushButton {
                 background-color: white;
                 color: #1a5490;
+                border: none;
             }
             QPushButton:hover {
                 background-color: #e8eef5;
@@ -210,6 +244,7 @@ class MainWindow(QMainWindow):
             QPushButton {
                 background-color: rgba(255, 255, 255, 0.2);
                 color: white;
+                border: none;
             }
             QPushButton:hover {
                 background-color: rgba(255, 255, 255, 0.3);
@@ -218,7 +253,6 @@ class MainWindow(QMainWindow):
         logout_btn.clicked.connect(self.logout)
         layout.addWidget(logout_btn)
         
-        header.setLayout(layout)
         return header
     
     def create_dashboard(self):
@@ -226,9 +260,15 @@ class MainWindow(QMainWindow):
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
         
-        dashboard_content = QWidget()
+        self.dashboard_content = QWidget()
         layout = QVBoxLayout()
         layout.setSpacing(20)
+        
+        # Dataset Context Label (Point 10)
+        self.context_label = QLabel("Waiting for data...")
+        self.context_label.setStyleSheet("font-size: 14px; color: #666; font-style: italic;")
+        self.context_label.setAlignment(Qt.AlignLeft)
+        layout.addWidget(self.context_label)
         
         # Summary cards
         self.summary_widget = SummaryWidget()
@@ -238,7 +278,7 @@ class MainWindow(QMainWindow):
         # Charts
         self.chart_widget = ChartWidget()
         self.chart_widget.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
-        self.chart_widget.setMinimumHeight(350) 
+        self.chart_widget.setMinimumHeight(450) # Increased height for 2x2 grid
         layout.addWidget(self.chart_widget)
         
         # Data table
@@ -247,8 +287,16 @@ class MainWindow(QMainWindow):
         self.table_widget.setMinimumHeight(250)
         layout.addWidget(self.table_widget)
         
-        dashboard_content.setLayout(layout)
-        scroll_area.setWidget(dashboard_content)
+        self.dashboard_content.setLayout(layout)
+        scroll_area.setWidget(self.dashboard_content)
+        
+        # Opacity effect for transition
+        self.opacity_effect = QGraphicsOpacityEffect(self.dashboard_content)
+        self.dashboard_content.setGraphicsEffect(self.opacity_effect)
+        
+        self.fade_anim = QPropertyAnimation(self.opacity_effect, b"opacity")
+        self.fade_anim.setDuration(300)
+        self.fade_anim.setEasingCurve(QEasingCurve.InOutQuad)
         
         return scroll_area
 
@@ -269,8 +317,22 @@ class MainWindow(QMainWindow):
         widget.setLayout(layout)
         return widget
     
+
+    
     def load_data(self):
         """Load latest dataset from backend."""
+        if self.current_dataset and self.animations_enabled:
+            # Fade out
+            self.fade_anim.setStartValue(1.0)
+            self.fade_anim.setEndValue(0.5)
+            self.fade_anim.start()
+            
+            # Delay data update slightly
+            QTimer.singleShot(300, self._perform_data_load)
+        else:
+            self._perform_data_load()
+            
+    def _perform_data_load(self):
         try:
             self.statusBar.showMessage("Loading data...")
             
@@ -279,6 +341,7 @@ class MainWindow(QMainWindow):
             self.current_dataset = data
             
             # Update widgets
+            self.context_label.setText(f"Showing analysis for: {data['file_name']}")
             self.summary_widget.update_summary(data['summary'])
             self.chart_widget.update_charts(data['summary'], data['raw_data'])
             self.table_widget.update_data(data['raw_data'])
@@ -289,11 +352,17 @@ class MainWindow(QMainWindow):
 
             self.statusBar.showMessage(f"Loaded: {data['file_name']}")
             
+            if self.animations_enabled:
+                # Fade in
+                self.fade_anim.setStartValue(0.5)
+                self.fade_anim.setEndValue(1.0)
+                self.fade_anim.start()
+            else:
+                self.opacity_effect.setOpacity(1.0)
+            
         except Exception as e:
             self.statusBar.showMessage("No data available")
-            # Don't show popup on auto-refresh or init, but here we do
-            # actually we don't have auto-refresh yet
-            pass
+            self.opacity_effect.setOpacity(1.0)
 
     def update_history(self, history_data):
         """Update history table."""

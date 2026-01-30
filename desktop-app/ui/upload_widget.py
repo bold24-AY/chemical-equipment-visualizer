@@ -57,17 +57,34 @@ class UploadWidget(QWidget):
         """)
         group_layout.addWidget(self.upload_btn)
         
-        # Info section
-        info_label = QLabel(
-            "<b>Required CSV columns:</b><br>"
-            "• Equipment Name<br>"
-            "• Type<br>"
-            "• Flowrate (numeric)<br>"
-            "• Pressure (numeric)<br>"
+        # Info section (Contextual Help)
+        self.info_btn = QPushButton("Show Required Columns ⓘ")
+        self.info_btn.setCheckable(True)
+        self.info_btn.setStyleSheet("""
+            QPushButton {
+                background: transparent;
+                color: #1a5490;
+                text-align: left;
+                border: none;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background: #f0f7ff;
+            }
+        """)
+        self.info_btn.clicked.connect(self.toggle_info)
+        group_layout.addWidget(self.info_btn)
+        
+        self.info_label = QLabel(
+            "• Equipment Name\n"
+            "• Type\n"
+            "• Flowrate (numeric)\n"
+            "• Pressure (numeric)\n"
             "• Temperature (numeric)"
         )
-        info_label.setStyleSheet("padding: 10px; background: #e8eef5; border-left: 4px solid #1a5490; margin-top: 10px;")
-        group_layout.addWidget(info_label)
+        self.info_label.setStyleSheet("padding: 10px; background: #e8eef5; border-radius: 5px; margin-left: 10px;")
+        self.info_label.setVisible(False)
+        group_layout.addWidget(self.info_label)
         
         group.setLayout(group_layout)
         layout.addWidget(group)
@@ -121,3 +138,12 @@ class UploadWidget(QWidget):
             )
             self.upload_btn.setEnabled(True)
             self.upload_btn.setText("Upload & Analyze")
+    
+    def toggle_info(self):
+        """Toggle visibility of requirements info."""
+        if self.info_btn.isChecked():
+            self.info_label.setVisible(True)
+            self.info_btn.setText("Hide Required Columns ⓘ")
+        else:
+            self.info_label.setVisible(False)
+            self.info_btn.setText("Show Required Columns ⓘ")

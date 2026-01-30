@@ -13,6 +13,9 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [currentDataset, setCurrentDataset] = useState(null);
   const [history, setHistory] = useState([]);
+  // Animations are now always enabled by default
+  const enableAnimations = true;
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [activeTab, setActiveTab] = useState('upload');
 
   useEffect(() => {
@@ -25,15 +28,22 @@ function App() {
     verifyAuth();
   }, []);
 
-  useEffect(() => {
-    // Load data if authenticated
-    if (isAuthenticated) {
-      loadData();
-    }
-  }, [isAuthenticated]);
+  // Use a ref to access the latest currentDataset inside loadData
+  // without adding it as a dependency that triggers re-creation
+  const currentDatasetRef = React.useRef(currentDataset);
 
-  const loadData = async () => {
+  useEffect(() => {
+    currentDatasetRef.current = currentDataset;
+  }, [currentDataset]);
+
+  const loadData = React.useCallback(async () => {
     try {
+      if (currentDatasetRef.current) {
+        setIsTransitioning(true);
+        // Small delay to allow fade out
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+
       // Try to get latest summary
       const summaryData = await getSummary();
       setCurrentDataset(summaryData);
@@ -41,11 +51,21 @@ function App() {
       // Get history
       const historyData = await getHistory();
       setHistory(historyData);
+
+      setIsTransitioning(false);
     } catch (error) {
       // No data available yet
       console.log('No data available');
+      setIsTransitioning(false);
     }
-  };
+  }, []); // Stable dependency array
+
+  useEffect(() => {
+    // Load data if authenticated
+    if (isAuthenticated) {
+      loadData();
+    }
+  }, [isAuthenticated, loadData]);
 
 
   const getRelativeTime = (dateString) => {
@@ -98,6 +118,7 @@ function App() {
       <header className="app-header">
         <h1>🧪 Chemical Equipment Visualizer</h1>
         <div className="header-actions">
+
           <span className="user-info">Welcome!</span>
           <button onClick={handleLogout} className="btn-secondary">
             Logout
@@ -134,7 +155,7 @@ function App() {
         )}
 
         {activeTab === 'dashboard' && (
-          <div className="tab-content">
+          <div className={`tab-content dashboard-content ${isTransitioning ? 'animating' : ''}`}>
             {currentDataset ? (
               <>
                 <div className="dashboard-header">
@@ -150,14 +171,20 @@ function App() {
                   </button>
                 </div>
 
-                <SummaryCards summary={currentDataset.summary} />
-                <Charts summary={currentDataset.summary} data={currentDataset.raw_data} />
+                <SummaryCards summary={currentDataset.summary} enableAnimations={enableAnimations} />
+
+                <h3 className="section-header">Visual Analysis</h3>
+                <p className="dataset-info" style={{ marginBottom: '1rem' }}>
+                  Showing analysis for: <strong>{currentDataset.file_name}</strong>
+                </p>
+
+                <Charts summary={currentDataset.summary} data={currentDataset.raw_data} enableAnimations={enableAnimations} />
                 <DataTable data={currentDataset.raw_data} />
               </>
             ) : (
               <div className="no-data-placeholder">
-                <h2>No Data Available</h2>
-                <p>Upload a CSV file to get started!</p>
+                <h2>No data yet</h2>
+                <p>Upload a CSV file to see visualizations.</p>
                 <button onClick={() => setActiveTab('upload')} className="btn-primary">
                   Upload Data
                 </button>

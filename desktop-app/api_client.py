@@ -20,6 +20,11 @@ class APIClient:
             'password': password
         })
         response.raise_for_status()
+        
+        # Extract CSRF token and set header for future requests
+        if 'csrftoken' in self.session.cookies:
+            self.session.headers.update({'X-CSRFToken': self.session.cookies['csrftoken']})
+            
         return response.json()
     
     def logout(self):

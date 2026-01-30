@@ -12,6 +12,7 @@ plt.style.use('ggplot')
 class ChartWidget(QWidget):
     def __init__(self):
         super().__init__()
+        self.animations_enabled = True
         self.init_ui()
     
     def init_ui(self):
@@ -24,7 +25,13 @@ class ChartWidget(QWidget):
         layout.addWidget(self.canvas)
         self.setLayout(layout)
         self.setMinimumHeight(800) # Ensure enough vertical space for the scroll area
-    
+        
+        self.clear() # Show initial placeholder
+        
+    def set_animations_enabled(self, enabled):
+        self.animations_enabled = enabled
+        # No specific animation logic for static matplotlib charts currently
+            
     def update_charts(self, summary, raw_data):
         """
         Update charts with new data.
@@ -34,7 +41,9 @@ class ChartWidget(QWidget):
         
         self.figure.clear()
         
-        # Grid layout: 2 rows, 2 columns
+        # Grid layout: 2 rows
+        # Row 1: Bar and Pie (side by side)
+        # Row 2: Line Chart (full width)
         gs = self.figure.add_gridspec(2, 2, height_ratios=[1, 1])
         
         # Ax1: Bar Chart (Top Left)
@@ -79,15 +88,21 @@ class ChartWidget(QWidget):
         ax2.axis('equal')
         
         # --- Line Chart (Trends) ---
+        # --- Line Chart (Trends) ---
         if raw_data:
-            indices = range(1, len(raw_data) + 1)
-            flowrates = [d['Flowrate'] for d in raw_data]
-            pressures = [d['Pressure'] for d in raw_data]
-            temperatures = [d['Temperature'] for d in raw_data]
+            # Downsample if too many points (readability)
+            step = 10 if len(raw_data) > 100 else 1
             
-            ax3.plot(indices, flowrates, label='Flowrate', color='#2ecc71', linewidth=2, marker='o', markersize=4)
-            ax3.plot(indices, pressures, label='Pressure', color='#3B82F6', linewidth=2, marker='s', markersize=4)
-            ax3.plot(indices, temperatures, label='Temperature', color='#EF4444', linewidth=2, marker='^', markersize=4)
+            # Create subset lists
+            indices = list(range(1, len(raw_data) + 1))[::step]
+            flowrates = [d['Flowrate'] for d in raw_data][::step]
+            pressures = [d['Pressure'] for d in raw_data][::step]
+            temperatures = [d['Temperature'] for d in raw_data][::step]
+            
+            # Plot with transparency and smaller markers
+            ax3.plot(indices, flowrates, label='Flowrate', color='#2ecc71', alpha=0.7, linewidth=1.5, marker='o', markersize=3)
+            ax3.plot(indices, pressures, label='Pressure', color='#3B82F6', alpha=0.7, linewidth=1.5, marker='s', markersize=3)
+            ax3.plot(indices, temperatures, label='Temperature', color='#EF4444', alpha=0.7, linewidth=1.5, marker='^', markersize=3)
             
             ax3.set_title('Parameter Trends', fontsize=12, fontweight='bold', pad=10)
             ax3.set_xlabel('Equipment Index', fontsize=10)
@@ -99,7 +114,18 @@ class ChartWidget(QWidget):
     
     def clear(self):
         """
-        Clear all charts.
+        Clear all charts and show placeholder.
         """
         self.figure.clear()
+        
+        # Show "No Data" message
+        self.figure.text(
+            0.5, 0.5, 
+            'No data available.\nUpload a CSV file to see visualizations.', 
+            ha='center', 
+            va='center', 
+            fontsize=14, 
+            color='#666666'
+        )
+        
         self.canvas.draw()

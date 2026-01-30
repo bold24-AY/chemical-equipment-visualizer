@@ -35,11 +35,11 @@ function UploadForm({ onUploadSuccess }) {
       await uploadCSV(selectedFile);
       setSuccess('File uploaded and analyzed successfully!');
       setSelectedFile(null);
-      
+
       // Reset file input
       const fileInput = document.getElementById('csv-file-input');
       if (fileInput) fileInput.value = '';
-      
+
       // Notify parent component
       if (onUploadSuccess) {
         onUploadSuccess();
@@ -54,7 +54,7 @@ function UploadForm({ onUploadSuccess }) {
   return (
     <div className="upload-form">
       <h2>Upload Equipment Data</h2>
-      
+
       <div className="file-input-wrapper">
         <input
           type="file"
@@ -80,14 +80,19 @@ function UploadForm({ onUploadSuccess }) {
       {success && <div className="success-message">{success}</div>}
 
       <div className="upload-info">
-        <p><strong>Required columns:</strong></p>
-        <ul>
-          <li>Equipment Name</li>
-          <li>Type</li>
-          <li>Flowrate (numeric)</li>
-          <li>Pressure (numeric)</li>
-          <li>Temperature (numeric)</li>
-        </ul>
+        <details>
+          <summary>Required columns info ⓘ</summary>
+          <div className="requirements-content">
+            <p>Your CSV file must contain the following columns:</p>
+            <ul>
+              <li>Equipment Name</li>
+              <li>Type</li>
+              <li>Flowrate (numeric)</li>
+              <li>Pressure (numeric)</li>
+              <li>Temperature (numeric)</li>
+            </ul>
+          </div>
+        </details>
       </div>
     </div>
   );
