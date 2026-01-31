@@ -18,55 +18,73 @@ def main():
     api_client = APIClient()
     
     # Show login dialog
-    login_dialog = LoginDialog()
+    from ui.main_window import LoginDialog, SignupDialog
+    
+    current_dialog = LoginDialog()
     
     while True:
-        if login_dialog.exec_() == login_dialog.Accepted:
-            username, password = login_dialog.get_credentials()
+        result = current_dialog.exec_()
+        
+        if result == 10: # Switch dialog
+            if isinstance(current_dialog, LoginDialog):
+                current_dialog = SignupDialog()
+            else:
+                current_dialog = LoginDialog()
+            continue
             
-            if not username or not password:
-                QMessageBox.warning(
-                    None,
-                    "Invalid Input",
-                    "Please enter both username and password."
-                )
-                continue
-            
-            try:
-                # Attempt login
-                api_client.login(username, password)
-                
-                # Login successful - show main window
-                window = MainWindow(api_client)
-                window.show()
-                
-                # Try to load initial data
+        if result == current_dialog.Accepted:
+            if isinstance(current_dialog, LoginDialog):
+                username, password = current_dialog.get_credentials()
+                if not username or not password:
+                    QMessageBox.warning(None, "Invalid Input", "Please enter both username and password.")
+                    continue
                 try:
-                    window.load_data()
-                except:
-                    pass  # No data available yet
+                    # Attempt login
+                    api_client.login(username, password)
+                    break # Success!
+                except Exception as e:
+                    error_msg = str(e)
+                    if 'Unauthorized' in error_msg or '401' in error_msg:
+                        QMessageBox.critical(None, "Login Failed", "Invalid username or password.")
+                    else:
+                        QMessageBox.critical(None, "Connection Error", f"Could not connect to server:\n{error_msg}")
+                        # Don't break here, let user try again
+                        
+            elif isinstance(current_dialog, SignupDialog):
+                username, password, email = current_dialog.get_credentials()
+                confirm_password = current_dialog.confirm_input.text()
                 
-                sys.exit(app.exec_())
+                if not username or not password:
+                     QMessageBox.warning(None, "Invalid Input", "Username and password are required.")
+                     continue
                 
-            except Exception as e:
-                error_msg = str(e)
-                if 'Unauthorized' in error_msg or '401' in error_msg:
-                    QMessageBox.critical(
-                        None,
-                        "Login Failed",
-                        "Invalid username or password."
-                    )
-                else:
-                    QMessageBox.critical(
-                        None,
-                        "Connection Error",
-                        f"Could not connect to server:\n{error_msg}\n\n"
-                        "Please ensure the Django backend is running on http://127.0.0.1:8000"
-                    )
-                    break
+                if password != confirm_password:
+                    QMessageBox.warning(None, "Password Mismatch", "Passwords do not match.")
+                    continue
+                    
+                try:
+                    # Attempt registration
+                    api_client.register(username, password, email)
+                    QMessageBox.information(None, "Success", "Account created successfully! You are now logged in.")
+                    break # Success!
+                except Exception as e:
+                    QMessageBox.critical(None, "Registration Failed", f"Could not register:\n{str(e)}")
+
         else:
-            # User cancelled login
-            break
+            # User cancelled
+            return
+
+    # Login/Register successful - show main window
+    window = MainWindow(api_client)
+    window.show()
+    
+    # Try to load initial data
+    try:
+        window.load_data()
+    except:
+        pass  # No data available yet
+    
+    sys.exit(app.exec_())
 
 
 if __name__ == '__main__':

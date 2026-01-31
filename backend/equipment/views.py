@@ -65,6 +65,24 @@ def logout_view(request):
     logout(request)
     return Response({'message': 'Logout successful'})
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register(request):
+    """
+    Register a new user.
+    """
+    from .serializers import UserSerializer
+    
+    serializer = UserSerializer(data=request.data)
+    if serializer.is_valid():
+        user = serializer.save()
+        login(request, user) # Auto-login after registration
+        return Response({
+            'message': 'User registered successfully',
+            'username': user.username
+        }, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -86,7 +104,7 @@ def upload_csv(request):
     """
     Upload and process CSV file.
     Validates structure, analyzes data, and stores in database.
-    Maintains only last 5 uploads.
+    Maintains only last 5 uploads for the current user.
     """
     if 'file' not in request.FILES:
         return Response(
@@ -125,15 +143,16 @@ def upload_csv(request):
     
     # Create dataset record
     dataset = Dataset.objects.create(
+        user=request.user,
         file_name=file.name,
         summary=summary,
         raw_data=raw_data
     )
     
-    # Keep only last 5 uploads
-    ids_to_keep = list(Dataset.objects.order_by('-uploaded_at').values_list('id', flat=True)[:5])
+    # Keep only last 5 uploads for this user
+    ids_to_keep = list(Dataset.objects.filter(user=request.user).order_by('-uploaded_at').values_list('id', flat=True)[:5])
     if ids_to_keep:
-        Dataset.objects.exclude(id__in=ids_to_keep).delete()
+        Dataset.objects.filter(user=request.user).exclude(id__in=ids_to_keep).delete()
     
     serializer = DatasetSerializer(dataset)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -143,10 +162,10 @@ def upload_csv(request):
 @permission_classes([IsAuthenticated])
 def get_summary(request):
     """
-    Get the most recent dataset summary.
+    Get the most recent dataset summary for the current user.
     """
     try:
-        latest_dataset = Dataset.objects.first()
+        latest_dataset = Dataset.objects.filter(user=request.user).first()
         if not latest_dataset:
             return Response(
                 {'error': 'No datasets uploaded yet'},
@@ -167,9 +186,9 @@ def get_summary(request):
 @permission_classes([IsAuthenticated])
 def get_history(request):
     """
-    Get last 5 dataset uploads (summary only, no raw data).
+    Get last 5 dataset uploads for the current user.
     """
-    datasets = Dataset.objects.all()[:5]
+    datasets = Dataset.objects.filter(user=request.user)[:5]
     serializer = DatasetSummarySerializer(datasets, many=True)
     return Response(serializer.data)
 
@@ -178,10 +197,10 @@ def get_history(request):
 @permission_classes([IsAuthenticated])
 def get_dataset(request, dataset_id):
     """
-    Get specific dataset by ID.
+    Get specific dataset by ID (ensuring it belongs to the user).
     """
     try:
-        dataset = Dataset.objects.get(id=dataset_id)
+        dataset = Dataset.objects.get(id=dataset_id, user=request.user)
         serializer = DatasetSerializer(dataset)
         return Response(serializer.data)
     except Dataset.DoesNotExist:
@@ -196,14 +215,13 @@ def get_dataset(request, dataset_id):
 def generate_report(request, dataset_id=None):
     """
     Generate PDF report for a dataset.
-    Includes summary statistics and charts.
     """
     try:
         # Get dataset
         if dataset_id:
-            dataset = Dataset.objects.get(id=dataset_id)
+            dataset = Dataset.objects.get(id=dataset_id, user=request.user)
         else:
-            dataset = Dataset.objects.first()
+            dataset = Dataset.objects.filter(user=request.user).first()
             if not dataset:
                 return Response(
                     {'error': 'No datasets available'},

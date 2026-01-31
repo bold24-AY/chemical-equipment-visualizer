@@ -54,11 +54,86 @@ class LoginDialog(QDialog):
         hint.setStyleSheet("color: #666; font-size: 11px; margin-top: 10px;")
         hint.setAlignment(Qt.AlignCenter)
         layout.addRow(hint)
+
+        # Sign up link
+        signup_label = QLabel('Not a user? <a href="#">Sign up</a>')
+        signup_label.setStyleSheet("color: #666; font-size: 11px; margin-top: 5px;")
+        signup_label.setAlignment(Qt.AlignCenter)
+        signup_label.setOpenExternalLinks(False) # Or True if valid URL
+        signup_label.linkActivated.connect(self.switch_to_signup)
+        layout.addRow(signup_label)
         
         self.setLayout(layout)
     
     def get_credentials(self):
         return self.username_input.text(), self.password_input.text()
+
+    def switch_to_signup(self):
+        """Close login and inform caller to show signup."""
+        self.done(10) # Custom return code for "Switch to Signup"
+
+
+class SignupDialog(QDialog):
+    """Signup dialog for registration."""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Sign Up - Chemical Equipment Visualizer")
+        self.setModal(True)
+        self.setFixedSize(400, 250)
+        
+        layout = QFormLayout()
+        
+        # Title
+        title = QLabel("Sign Up")
+        title.setStyleSheet("font-size: 18px; font-weight: bold; color: #1a5490; margin-bottom: 10px;")
+        title.setAlignment(Qt.AlignCenter)
+        layout.addRow(title)
+        
+        # Username
+        self.username_input = QLineEdit()
+        self.username_input.setPlaceholderText("Choose username")
+        layout.addRow("Username:", self.username_input)
+
+        # Email
+        self.email_input = QLineEdit()
+        self.email_input.setPlaceholderText("Email (Optional)")
+        layout.addRow("Email:", self.email_input)
+        
+        # Password
+        self.password_input = QLineEdit()
+        self.password_input.setEchoMode(QLineEdit.Password)
+        self.password_input.setPlaceholderText("Enter password")
+        layout.addRow("Password:", self.password_input)
+
+        # Confirm Password
+        self.confirm_input = QLineEdit()
+        self.confirm_input.setEchoMode(QLineEdit.Password)
+        self.confirm_input.setPlaceholderText("Confirm password")
+        layout.addRow("Confirm:", self.confirm_input)
+        
+        # Buttons
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addRow(buttons)
+
+        # Login link
+        login_label = QLabel('Already a user? <a href="#">Sign in</a>')
+        login_label.setStyleSheet("color: #666; font-size: 11px; margin-top: 10px;")
+        login_label.setAlignment(Qt.AlignCenter)
+        login_label.setOpenExternalLinks(False)
+        login_label.linkActivated.connect(self.switch_to_login) 
+        layout.addRow(login_label)
+        
+        self.setLayout(layout)
+    
+    def get_credentials(self):
+        return self.username_input.text(), self.password_input.text(), self.email_input.text()
+        
+    def switch_to_login(self):
+        """Close signup and inform caller to show login."""
+        self.done(10) # Custom return code for "Switch to Login"
 
 
 class MainWindow(QMainWindow):
@@ -177,7 +252,7 @@ class MainWindow(QMainWindow):
         # Assuming run from desktop-app directory or assets in CWD/assets
         header.setStyleSheet("""
             QWidget#header {
-                border-image: url(assets/her1.jpeg) 0 0 0 0 stretch stretch;
+                border-image: url(assets/chemical_lab_header.jpeg) 0 0 0 0 stretch stretch;
             }
         """)
         

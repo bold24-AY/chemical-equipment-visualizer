@@ -25,6 +25,27 @@ class APIClient:
         if 'csrftoken' in self.session.cookies:
             self.session.headers.update({'X-CSRFToken': self.session.cookies['csrftoken']})
             
+        if 'csrftoken' in self.session.cookies:
+            self.session.headers.update({'X-CSRFToken': self.session.cookies['csrftoken']})
+            
+        return response.json()
+    
+    def register(self, username, password, email=""):
+        """
+        Register a new user.
+        """
+        url = f"{self.base_url}/register/"
+        response = self.session.post(url, json={
+            'username': username,
+            'password': password,
+            'email': email
+        })
+        response.raise_for_status()
+        
+        # Extract CSRF token if present
+        if 'csrftoken' in self.session.cookies:
+            self.session.headers.update({'X-CSRFToken': self.session.cookies['csrftoken']})
+            
         return response.json()
     
     def logout(self):

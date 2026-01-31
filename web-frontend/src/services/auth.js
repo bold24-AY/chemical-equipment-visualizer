@@ -14,6 +14,18 @@ export const login = async (username, password) => {
 };
 
 /**
+ * Register user
+ */
+export const register = async (username, password, email) => {
+  const response = await axios.post(`${API_BASE_URL}/register/`, {
+    username,
+    password,
+    email
+  });
+  return response.data;
+};
+
+/**
  * Logout user
  */
 export const logout = async () => {
@@ -33,8 +45,11 @@ export const checkAuth = async () => {
   }
 };
 
-export default {
+const authService = {
   login,
   logout,
   checkAuth,
+  register,
 };
+
+export default authService;

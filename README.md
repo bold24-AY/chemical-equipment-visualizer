@@ -2,6 +2,8 @@
 
 A **hybrid web + desktop application** for uploading, analyzing, and visualizing chemical equipment parameter data from CSV files.
 
+**GitHub Repository:** [https://github.com/bold24-AY/chemical-equipment-visualizer](https://github.com/bold24-AY/chemical-equipment-visualizer)
+
 ## 📋 Table of Contents
 
 - [Features](#features)
@@ -25,8 +27,9 @@ A **hybrid web + desktop application** for uploading, analyzing, and visualizing
 - ✅ **Dual Interface** - Web (React) and Desktop (PyQt5) applications
 - ✅ **Interactive Charts** - Bar and Pie charts (Chart.js & Matplotlib)
 - ✅ **PDF Reports** - Generate detailed reports with charts and tables
-- ✅ **Data Persistence** - SQLite database stores last 5 uploads
-- ✅ **User Authentication** - Simple username/password login
+- ✅ **Data Persistence** - SQLite database stores last 5 uploads (per user)
+- ✅ **Secure Authentication** - User Registration & Login (Session-based)
+- ✅ **Data Isolation** - Multi-tenancy support: Users only see their own data
 - ✅ **RESTful API** - Django REST Framework backend
 
 ### Visualizations
@@ -89,7 +92,7 @@ A **hybrid web + desktop application** for uploading, analyzing, and visualizing
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone <https://github.com/bold24-AY/chemical-equipment-visualizer>
 cd chemical-equipment-visualizer
 ```
 
@@ -205,6 +208,7 @@ python main.py
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
+| `/api/register/` | POST | Register new user |
 | `/api/login/` | POST | Login with username/password |
 | `/api/logout/` | POST | Logout current session |
 | `/api/check-auth/` | GET | Check authentication status |
@@ -331,6 +335,8 @@ chemical-equipment-visualizer/
 │   └── src/
 │       ├── App.js                      # Main component
 │       ├── App.css                     # Styling
+│       ├── assets/                     # Images & Static assets
+│       │   └── chemical_lab_header.jpeg # Header image
 │       ├── components/                 # React components
 │       │   ├── Login.js
 │       │   ├── UploadForm.js
@@ -345,6 +351,8 @@ chemical-equipment-visualizer/
     ├── main.py                         # Entry point
     ├── api_client.py                   # REST API client
     ├── requirements.txt                # Python dependencies
+    ├── assets/                         # Resources
+    │   └── chemical_lab_header.jpeg    # Header image
     └── ui/                             # UI components
         ├── main_window.py              # Main window
         ├── upload_widget.py            # Upload UI

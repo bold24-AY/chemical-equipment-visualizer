@@ -10,7 +10,8 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py createsuperuser
-# Create: username=trial12, password=Trial@1234
+# Optional: Create admin user (trial12 / Trial@1234)
+# You can also REGISTER a new user directly in the app!
 python manage.py runserver
 ```
 ✅ Backend running at `http://127.0.0.1:8000`
@@ -34,8 +35,12 @@ python main.py
 ✅ Desktop app launches
 
 ## 🔐 Login Credentials
-- Username: `trial12`
-- Password: `Trial@1234`
+
+You have two options:
+1. **Register a New Account**: Click "Sign up" on the login screen.
+2. **Use Demo Credentials**:
+   - Username: `trial12`
+   - Password: `Trial@1234`
 
 ## 📄 Test CSV
 Use the included `sample_equipment_data.csv` file to test uploads.

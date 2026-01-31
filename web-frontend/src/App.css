@@ -25,7 +25,7 @@ body {
 
 /* Header */
 .app-header {
-  background-image: linear-gradient(rgba(26, 84, 144, 0.85), rgba(46, 127, 201, 0.85)), url('./assets/her1.jpeg');
+  background-image: linear-gradient(rgba(26, 84, 144, 0.85), rgba(46, 127, 201, 0.85)), url('./assets/chemical_lab_header.jpeg');
   background-size: cover;
   background-position: center;
   color: white;

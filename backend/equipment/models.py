@@ -9,7 +9,11 @@ class Dataset(models.Model):
     uploaded_at = models.DateTimeField(auto_now_add=True)
     file_name = models.CharField(max_length=255)
     summary = models.JSONField()  # Stores analytics: averages, counts, distributions
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    file_name = models.CharField(max_length=255)
+    summary = models.JSONField()  # Stores analytics: averages, counts, distributions
     raw_data = models.JSONField()  # Stores the actual equipment records
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='datasets', null=True)
     
     class Meta:
         ordering = ['-uploaded_at']
