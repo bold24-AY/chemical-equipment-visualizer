@@ -92,7 +92,7 @@ A **hybrid web + desktop application** for uploading, analyzing, and visualizing
 ### 1. Clone the Repository
 
 ```bash
-git clone <https://github.com/bold24-AY/chemical-equipment-visualizer>
+git clone https://github.com/bold24-AY/chemical-equipment-visualizer
 cd chemical-equipment-visualizer
 ```
 
