@@ -15,6 +15,8 @@ from .chart_widget import ChartWidget
 from .table_widget import TableWidget
 
 
+from PyQt5.QtSvg import QSvgWidget
+
 class LoginDialog(QDialog):
     """Login dialog for authentication."""
     
@@ -22,26 +24,39 @@ class LoginDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Login - Chemical Equipment Visualizer")
         self.setModal(True)
-        self.setFixedSize(400, 200)
+        self.setFixedSize(400, 320) # Increased height for logo
         
         layout = QFormLayout()
+
+        # Logo
+        logo = QSvgWidget("assets/logo.svg")
+        logo.setFixedSize(80, 80)
+        # Center logo
+        logo_container = QHBoxLayout()
+        logo_container.addStretch()
+        logo_container.addWidget(logo)
+        logo_container.addStretch()
+        layout.addRow(logo_container)
         
         # Title
         title = QLabel("Chemical Equipment Visualizer")
-        title.setStyleSheet("font-size: 18px; font-weight: bold; color: #1a5490; margin-bottom: 10px;")
+        title.setStyleSheet("font-size: 18px; font-weight: bold; color: #1a5490; margin-bottom: 20px;")
         title.setAlignment(Qt.AlignCenter)
+        title.setWordWrap(True)
         layout.addRow(title)
         
         # Username
         self.username_input = QLineEdit()
         self.username_input.setPlaceholderText("Enter username")
-        layout.addRow("Username:", self.username_input)
+        self.username_input.setStyleSheet("padding: 8px; border: 1px solid #ccc; border-radius: 4px;")
+        layout.addRow(self.username_input)
         
         # Password
         self.password_input = QLineEdit()
         self.password_input.setEchoMode(QLineEdit.Password)
         self.password_input.setPlaceholderText("Enter password")
-        layout.addRow("Password:", self.password_input)
+        self.password_input.setStyleSheet("padding: 8px; border: 1px solid #ccc; border-radius: 4px;")
+        layout.addRow(self.password_input)
         
         # Buttons
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
@@ -80,36 +95,50 @@ class SignupDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Sign Up - Chemical Equipment Visualizer")
         self.setModal(True)
-        self.setFixedSize(400, 250)
+        self.setFixedSize(400, 380) # Increased height for logo
         
         layout = QFormLayout()
+
+        # Logo
+        logo = QSvgWidget("assets/logo.svg")
+        logo.setFixedSize(60, 60)
+        # Center logo
+        logo_container = QHBoxLayout()
+        logo_container.addStretch()
+        logo_container.addWidget(logo)
+        logo_container.addStretch()
+        layout.addRow(logo_container)
         
         # Title
-        title = QLabel("Sign Up")
-        title.setStyleSheet("font-size: 18px; font-weight: bold; color: #1a5490; margin-bottom: 10px;")
+        title = QLabel("Create Account")
+        title.setStyleSheet("font-size: 18px; font-weight: bold; color: #1a5490; margin-bottom: 20px;")
         title.setAlignment(Qt.AlignCenter)
         layout.addRow(title)
         
         # Username
         self.username_input = QLineEdit()
         self.username_input.setPlaceholderText("Choose username")
+        self.username_input.setStyleSheet("padding: 6px; border: 1px solid #ccc; border-radius: 4px;")
         layout.addRow("Username:", self.username_input)
 
         # Email
         self.email_input = QLineEdit()
         self.email_input.setPlaceholderText("Email (Optional)")
+        self.email_input.setStyleSheet("padding: 6px; border: 1px solid #ccc; border-radius: 4px;")
         layout.addRow("Email:", self.email_input)
         
         # Password
         self.password_input = QLineEdit()
         self.password_input.setEchoMode(QLineEdit.Password)
         self.password_input.setPlaceholderText("Enter password")
+        self.password_input.setStyleSheet("padding: 6px; border: 1px solid #ccc; border-radius: 4px;")
         layout.addRow("Password:", self.password_input)
 
         # Confirm Password
         self.confirm_input = QLineEdit()
         self.confirm_input.setEchoMode(QLineEdit.Password)
         self.confirm_input.setPlaceholderText("Confirm password")
+        self.confirm_input.setStyleSheet("padding: 6px; border: 1px solid #ccc; border-radius: 4px;")
         layout.addRow("Confirm:", self.confirm_input)
         
         # Buttons
@@ -274,12 +303,20 @@ class MainWindow(QMainWindow):
         layout = QHBoxLayout(overlay)
         layout.setContentsMargins(15, 15, 15, 15)
         
-        # Title
-        title = QLabel("🧪 Chemical Equipment Visualizer")
-        title.setStyleSheet("color: white; font-size: 20px; font-weight: bold;")
-        layout.addWidget(title)
+        # Logo + Title
+        title_layout = QHBoxLayout()
+        title_layout.setSpacing(10)
         
-        layout.addStretch()
+        logo_label = QLabel()
+        logo_label.setPixmap(QIcon("assets/logo.svg").pixmap(QSize(32, 32)))
+        title_layout.addWidget(logo_label)
+        
+        title = QLabel("Chemical Equipment Visualizer")
+        title.setStyleSheet("color: white; font-size: 20px; font-weight: bold;")
+        title_layout.addWidget(title)
+        
+        title_layout.addStretch()
+        layout.addLayout(title_layout)
         
 
         

@@ -5,14 +5,18 @@ Main entry point.
 """
 import sys
 from PyQt5.QtWidgets import QApplication, QMessageBox
+from PyQt5.QtGui import QIcon
 from api_client import APIClient
-from ui.main_window import MainWindow, LoginDialog
+from ui.main_window import MainWindow, LoginDialog, SignupDialog
 
 
 def main():
     app = QApplication(sys.argv)
     app.setApplicationName("Chemical Equipment Visualizer")
     app.setStyle('Fusion')
+    
+    # Set application icon
+    app.setWindowIcon(QIcon('assets/logo.svg'))
     
     # Create API client
     api_client = APIClient()

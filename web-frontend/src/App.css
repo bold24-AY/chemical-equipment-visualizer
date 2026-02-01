@@ -179,73 +179,249 @@ body {
 }
 
 /* ... rest of upload info ... */
-.login-container {
+/* --- Login Page Split Layout --- */
+
+.login-scroll-container {
   min-height: 100vh;
   display: flex;
-  align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1a5490 0%, #2e7fc9 100%);
+  align-items: center;
+  background-color: #f0f4f8;
 }
 
-.login-card {
-  background: white;
-  padding: 3rem;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+.login-page {
+  display: flex;
   width: 100%;
-  max-width: 420px;
+  max-width: 1200px;
+  min-height: 700px;
+  background: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 20px;
 }
 
-.login-card h1 {
-  color: #1a5490;
-  margin-bottom: 0.5rem;
-  font-size: 1.8rem;
-}
-
-.subtitle {
-  color: #666;
-  margin-bottom: 2rem;
-  font-size: 0.95rem;
-}
-
-.login-form {
+/* Left Side: Graphic */
+.login-graphic {
+  flex: 1;
+  background-image: url('./assets/chemical_lab_header.jpeg');
+  background-size: cover;
+  background-position: center;
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  text-align: center;
+  padding: 40px;
+}
+
+.graphic-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(26, 84, 144, 0.9), rgba(46, 127, 201, 0.8));
+  z-index: 1;
+}
+
+.graphic-content {
+  position: relative;
+  z-index: 2;
+}
+
+.graphic-logo {
+  width: 80px;
+  margin-bottom: 20px;
+  filter: brightness(0) invert(1);
+  /* Ensure white logo */
+}
+
+.graphic-content h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.graphic-content p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+/* Right Side: Form */
+.login-form-container {
+  flex: 1;
+  padding: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  /* Center horizontally */
+}
+
+/* Constrain width of inner card content */
+.login-card {
+  width: 100%;
+  max-width: 400px;
+}
+
+.mobile-header {
+  display: none;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* ... previous styles ... */
+
+.form-header {
+  margin-bottom: 30px;
+  text-align: center;
+  /* Center everything including logo */
+}
+
+.form-logo-container {
+  margin-bottom: 15px;
+}
+
+.form-logo {
+  width: 60px;
+  /* Adjust size as needed */
+  height: auto;
+  /* No filter here, so it uses original colors (Dark Blue) */
+}
+
+.form-header h1 {
+  font-size: 1.8rem;
+  color: #1a5490;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+/* ... rest of CSS ... */
+
+.subtitle {
+  color: #64748b;
+  font-size: 1rem;
 }
 
 .form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  margin-bottom: 20px;
 }
 
 .form-group label {
-  font-weight: 600;
-  color: #333;
+  display: block;
+  margin-bottom: 8px;
+  color: #334155;
+  font-weight: 500;
   font-size: 0.9rem;
 }
 
 .form-group input {
-  padding: 0.75rem;
-  border: 2px solid #e0e6ed;
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #cbd5e1;
   border-radius: 6px;
   font-size: 1rem;
-  transition: border-color 0.3s ease;
+  transition: border-color 0.2s;
 }
 
 .form-group input:focus {
   outline: none;
   border-color: #1a5490;
+  box-shadow: 0 0 0 3px rgba(26, 84, 144, 0.1);
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  background-color: #1a5490;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-primary:hover {
+  background-color: #0f3d6e;
+}
+
+.btn-primary:active {
+  transform: translateY(1px);
+}
+
+.error-alert {
+  background-color: #fee2e2;
+  color: #991b1b;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+  border-left: 4px solid #ef4444;
 }
 
 .login-footer {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #e0e6ed;
+  margin-top: 30px;
   text-align: center;
-  color: #666;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  color: #64748b;
+}
+
+.toggle-link {
+  background: none;
+  border: none;
+  color: #1a5490;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.toggle-link:hover {
+  text-decoration: underline;
+}
+
+.demo-badge {
+  display: inline-block;
+  margin-top: 15px;
+  padding: 6px 12px;
+  background-color: #f1f5f9;
+  color: #475569;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-family: monospace;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .login-page {
+    flex-direction: column;
+    margin: 0;
+    min-height: 100vh;
+    border-radius: 0;
+  }
+
+  .login-graphic {
+    display: none;
+    /* Hide graphic on mobile or make it a small header */
+  }
+
+  .login-form-container {
+    padding: 30px 20px;
+  }
+
+  .mobile-header {
+    display: block;
+  }
+
+  .mobile-logo {
+    width: 60px;
+  }
 }
 
 /* Buttons (Point 4: Hover effects) */

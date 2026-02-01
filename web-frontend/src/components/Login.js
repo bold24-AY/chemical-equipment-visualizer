@@ -43,91 +43,107 @@ function Login({ onLoginSuccess }) {
   };
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <h1>Chemical Equipment Visualizer</h1>
-        <p className="subtitle">{isSignup ? 'Create an account' : 'Login to access the dashboard'}</p>
-
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter username"
-              required
-              autoFocus
-            />
+    <div className="login-scroll-container">
+      <div className="login-page">
+        {/* Left Side: Illustrative/Branding Area */}
+        <div className="login-graphic">
+          <div className="graphic-content">
+            <img src={require('../assets/logo.svg').default} alt="Logo" className="graphic-logo" />
+            <h2>Industrial Analytics <br /> Redefined</h2>
+            <p> Visualize flowrates, pressures, and temperatures with precision.</p>
           </div>
+          <div className="graphic-overlay"></div>
+        </div>
 
-          {isSignup && (
-            <div className="form-group">
-              <label htmlFor="email">Email (Optional)</label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter email"
-              />
+        {/* Right Side: Login Form */}
+        <div className="login-form-container">
+          <div className="login-card">
+
+            <div className="mobile-header">
+              <img src={require('../assets/logo.svg').default} alt="Logo" className="mobile-logo" />
             </div>
-          )}
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password"
-              required
-            />
+            <div className="form-header">
+              <div className="form-logo-container">
+                <img src={require('../assets/logo.svg').default} alt="Logo" className="form-logo" />
+              </div>
+              <h1>Chemical Equipment Visualizer</h1>
+              <p className="subtitle">{isSignup ? 'Create an account to get started' : 'Login to access your dashboard'}</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="login-form">
+              <div className="form-group">
+                <label htmlFor="username">Username</label>
+                <input
+                  type="text"
+                  id="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Enter your username"
+                  required
+                  autoFocus
+                />
+              </div>
+
+              {isSignup && (
+                <div className="form-group">
+                  <label htmlFor="email">Email Address</label>
+                  <input
+                    type="email"
+                    id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@company.com"
+                  />
+                </div>
+              )}
+
+              <div className="form-group">
+                <label htmlFor="password">Password</label>
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+
+              {isSignup && (
+                <div className="form-group">
+                  <label htmlFor="confirmPassword">Confirm Password</label>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+              )}
+
+              {error && <div className="error-alert">⚠️ {error}</div>}
+
+              <button type="submit" className="btn-primary" disabled={loading}>
+                {loading ? 'Processing...' : (isSignup ? 'Create Account' : 'Sign in')}
+              </button>
+            </form>
+
+            <div className="login-footer">
+              <p>
+                {isSignup ? 'Already have an account? ' : 'Don\'t have an account? '}
+                <button
+                  onClick={toggleMode}
+                  className="toggle-link"
+                >
+                  {isSignup ? 'Sign in' : 'Sign up'}
+                </button>
+              </p>
+              {!isSignup && <div className="demo-badge">Demo: trial12 / Trial@1234</div>}
+            </div>
           </div>
-
-          {isSignup && (
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm Password</label>
-              <input
-                type="password"
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm password"
-                required
-              />
-            </div>
-          )}
-
-          {error && <div className="error-message">{error}</div>}
-
-          <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Processing...' : (isSignup ? 'Sign Up' : 'Login')}
-          </button>
-        </form>
-
-        <div className="login-footer">
-          {!isSignup && <p>Demo credentials: trial12 / Trial@1234</p>}
-          <p style={{ marginTop: '10px', fontSize: '0.9em' }}>
-            {isSignup ? 'Already a user? ' : 'Not a user? '}
-            <button
-              onClick={toggleMode}
-              style={{
-                background: 'none',
-                border: 'none',
-                padding: 0,
-                color: '#1a5490',
-                textDecoration: 'underline',
-                cursor: 'pointer',
-                fontSize: 'inherit',
-                fontFamily: 'inherit'
-              }}
-            >
-              {isSignup ? 'Sign in' : 'Sign up'}
-            </button>
-          </p>
         </div>
       </div>
     </div>
