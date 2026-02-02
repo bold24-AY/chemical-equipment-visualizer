@@ -16,11 +16,12 @@ from .utils import validate_csv_structure, analyze_csv, get_chart_data
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak, KeepTogether
 from reportlab.lib import colors
 from reportlab.graphics.shapes import Drawing, Polygon, Circle
 from reportlab.graphics.charts.barcharts import VerticalBarChart
 from reportlab.graphics.charts.piecharts import Pie
+from reportlab.graphics.charts.legends import Legend
 
 import io
 from datetime import datetime
@@ -234,16 +235,14 @@ def generate_report(request, dataset_id=None):
         story = []
         styles = getSampleStyleSheet()
         
-        # Logo - Simple Chemical Benzene Ring
+        # --- Logo ---
         logo_drawing = Drawing(40, 40)
-        # Hexagon points
         points = [20, 40, 37, 30, 37, 10, 20, 0, 3, 10, 3, 30]
         hexagon = Polygon(points)
         hexagon.fillColor = colors.HexColor('#1a5490')
         hexagon.strokeColor = colors.HexColor('#1a5490')
         logo_drawing.add(hexagon)
         
-        # Circle inside (aromatic ring)
         circle = Circle(20, 20, 10)
         circle.fillColor = colors.white
         circle.strokeColor = colors.white
@@ -252,116 +251,152 @@ def generate_report(request, dataset_id=None):
         story.append(logo_drawing)
         story.append(Spacer(1, 0.1*inch))
         
-        # Title
+        # --- Title ---
         title_style = ParagraphStyle(
             'CustomTitle',
             parent=styles['Heading1'],
             fontSize=24,
             textColor=colors.HexColor('#1a5490'),
-            spaceAfter=30,
+            spaceAfter=20,
             alignment=1  # Center
         )
         story.append(Paragraph("Chemical Equipment Parameter Report", title_style))
-        story.append(Spacer(1, 0.3*inch))
+        story.append(Spacer(1, 0.2*inch))
         
-        # Dataset Info
-        info_style = styles['Normal']
+        # --- Metadata ---
+        info_style = ParagraphStyle(
+            'InfoStyle',
+            parent=styles['Normal'],
+            fontSize=10,
+            textColor=colors.HexColor('#555555')
+        )
         story.append(Paragraph(f"<b>Dataset:</b> {dataset.file_name}", info_style))
         story.append(Paragraph(f"<b>Generated:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", info_style))
         story.append(Paragraph(f"<b>Uploaded:</b> {dataset.uploaded_at.strftime('%Y-%m-%d %H:%M:%S')}", info_style))
         story.append(Spacer(1, 0.3*inch))
         
-        # Summary Statistics Table
+        # --- Summary Statistics Table ---
         story.append(Paragraph("<b>Summary Statistics</b>", styles['Heading2']))
         story.append(Spacer(1, 0.1*inch))
         
         summary = dataset.summary
+        
+        # Helper to safely get value
+        def get_val(key, fmt="{:.2f}"):
+            val = summary.get(key)
+            if val is None:
+                return "N/A"
+            return fmt.format(val)
+
         summary_data = [
-            ['Metric', 'Value'],
-            ['Total Equipment', str(summary['total_equipment'])],
-            ['Average Flowrate', f"{summary['average_flowrate']:.2f}"],
-            ['Average Pressure', f"{summary['average_pressure']:.2f}"],
-            ['Average Temperature', f"{summary['average_temperature']:.2f}"],
+            ['Metric', 'Value', 'Min', 'Max'],
+            ['Total Equipment', str(summary.get('total_equipment', 0)), '-', '-'],
+            ['Flowrate', get_val('average_flowrate'), get_val('min_flowrate'), get_val('max_flowrate')],
+            ['Pressure', get_val('average_pressure'), get_val('min_pressure'), get_val('max_pressure')],
+            ['Temperature', get_val('average_temperature'), get_val('min_temperature'), get_val('max_temperature')],
         ]
         
-        summary_table = Table(summary_data, colWidths=[3*inch, 2*inch])
+        summary_table = Table(summary_data, colWidths=[2.5*inch, 1.5*inch, 1.5*inch, 1.5*inch])
         summary_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1a5490')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'), # Left align first column
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 12),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#dddddd')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f1f2f6')]),
         ]))
         story.append(summary_table)
-        story.append(Spacer(1, 0.3*inch))
+        story.append(Spacer(1, 0.2*inch))
         
-        # Equipment Type Distribution Table
-        story.append(Paragraph("<b>Equipment Type Distribution</b>", styles['Heading2']))
-        story.append(Spacer(1, 0.1*inch))
+        # --- Bar Chart ---
+        bar_elements = []
+        bar_elements.append(Paragraph("<b>Average Parameters</b>", styles['Heading2']))
+        bar_elements.append(Spacer(1, 0.1*inch))
         
-        type_data = [['Equipment Type', 'Count']]
-        for eq_type, count in summary['type_distribution'].items():
-            type_data.append([eq_type, str(count)])
-        
-        type_table = Table(type_data, colWidths=[3*inch, 2*inch])
-        type_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1a5490')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ]))
-        story.append(type_table)
-        story.append(Spacer(1, 0.3*inch))
-        
-        # Bar Chart - Average Parameters
-        story.append(Paragraph("<b>Average Parameters Chart</b>", styles['Heading2']))
-        story.append(Spacer(1, 0.1*inch))
-        
-        drawing = Drawing(400, 200)
+        drawing = Drawing(450, 200)
         bar_chart = VerticalBarChart()
         bar_chart.x = 50
         bar_chart.y = 50
-        bar_chart.height = 125
-        bar_chart.width = 300
+        bar_chart.height = 150
+        bar_chart.width = 350
         bar_chart.data = [[
-            summary['average_flowrate'],
-            summary['average_pressure'],
-            summary['average_temperature']
+            summary.get('average_flowrate', 0),
+            summary.get('average_pressure', 0),
+            summary.get('average_temperature', 0)
         ]]
         bar_chart.categoryAxis.categoryNames = ['Flowrate', 'Pressure', 'Temperature']
         bar_chart.bars[0].fillColor = colors.HexColor('#1a5490')
+        bar_chart.valueAxis.valueMin = 0
         drawing.add(bar_chart)
-        story.append(drawing)
-        story.append(Spacer(1, 0.3*inch))
+        bar_elements.append(drawing)
         
-        # Pie Chart - Equipment Type Distribution
-        story.append(Paragraph("<b>Equipment Type Distribution Chart</b>", styles['Heading2']))
-        story.append(Spacer(1, 0.1*inch))
+        story.append(KeepTogether(bar_elements))
+        story.append(Spacer(1, 0.2*inch))
         
-        pie_drawing = Drawing(400, 200)
+        # --- Pie Chart ---
+        pie_elements = []
+        pie_elements.append(Paragraph("<b>Equipment Type Distribution</b>", styles['Heading2']))
+        pie_elements.append(Spacer(1, 0.1*inch))
+        
+        pie_drawing = Drawing(450, 250)
         pie = Pie()
-        pie.x = 150
-        pie.y = 50
-        pie.width = 100
-        pie.height = 100
-        pie.data = list(summary['type_distribution'].values())
-        pie.labels = list(summary['type_distribution'].keys())
-        pie.slices.strokeWidth = 0.5
-        pie_drawing.add(pie)
-        story.append(pie_drawing)
+        pie.x = 20
+        pie.y = 60
+        pie.width = 150
+        pie.height = 150
         
-        # Build PDF
+        # Data
+        labels = list(summary['type_distribution'].keys())
+        data = list(summary['type_distribution'].values())
+        
+        pie.data = data
+        pie.labels = None # Disable direct labels to avoid overlap
+        
+        # Colors
+        pie_colors = [
+            colors.HexColor('#1a5490'), colors.HexColor('#4a69bd'),
+            colors.HexColor('#6a89cc'), colors.HexColor('#82ccdd'),
+            colors.HexColor('#b8e994'), colors.HexColor('#f8c291'),
+            colors.HexColor('#e55039')
+        ]
+        
+        for i, val in enumerate(pie.data):
+             pie.slices[i].fillColor = pie_colors[i % len(pie_colors)]
+             pie.slices[i].strokeColor = colors.white
+             pie.slices[i].strokeWidth = 1
+        
+        pie_drawing.add(pie)
+        
+        # Legend
+        legend = Legend()
+        legend.x = 220
+        legend.y = 160
+        legend.boxAnchor = 'w'
+        legend.columnMaximum = 10
+        legend.fontName = 'Helvetica'
+        legend.fontSize = 10
+        
+        # Create color/name pairs for legend
+        legend_data = []
+        for i, label in enumerate(labels):
+            color = pie_colors[i % len(pie_colors)]
+            # Add count to label
+            label_text = f"{label} ({data[i]})"
+            legend_data.append((color, label_text))
+            
+        legend.colorNamePairs = legend_data
+        pie_drawing.add(legend)
+        
+        pie_elements.append(pie_drawing)
+        story.append(KeepTogether(pie_elements))
+        
+        # --- Build PDF ---
         doc.build(story)
         buffer.seek(0)
         
-        # Return PDF response
         response = HttpResponse(buffer, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="equipment_report_{dataset.id}.pdf"'
         return response
