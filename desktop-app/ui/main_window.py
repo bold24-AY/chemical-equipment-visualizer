@@ -199,7 +199,8 @@ class MainWindow(QMainWindow):
             QTabBar::tab {
                 background: transparent;
                 color: #666;
-                padding: 12px 24px;
+                padding: 12px 30px;
+                min-width: 120px;
                 margin: 0;
                 border-bottom: 3px solid transparent;
                 font-size: 14px;
@@ -218,15 +219,15 @@ class MainWindow(QMainWindow):
         # Upload tab
         self.upload_widget = UploadWidget(self.api_client)
         self.upload_widget.upload_success.connect(self.on_upload_success)
-        self.tabs.addTab(self.upload_widget, "📤 Upload")
+        self.tabs.addTab(self.upload_widget, "  📤 Upload  ")
         
         # Dashboard tab
         self.dashboard_widget = self.create_dashboard()
-        self.tabs.addTab(self.dashboard_widget, "📊 Dashboard")
+        self.tabs.addTab(self.dashboard_widget, "  📊 Dashboard  ")
         
         # History tab
         self.history_widget = self.create_history_tab()
-        self.tabs.addTab(self.history_widget, "📜 History")
+        self.tabs.addTab(self.history_widget, "  📜 History  ")
         
         main_layout.addWidget(self.tabs)
         
@@ -305,14 +306,10 @@ class MainWindow(QMainWindow):
         
         # Logo + Title
         title_layout = QHBoxLayout()
-        title_layout.setSpacing(10)
-        
-        logo_label = QLabel()
-        logo_label.setPixmap(QIcon("assets/logo.svg").pixmap(QSize(32, 32)))
-        title_layout.addWidget(logo_label)
+        title_layout.setContentsMargins(15, 0, 0, 0) # Add some left margin for the title
         
         title = QLabel("Chemical Equipment Visualizer")
-        title.setStyleSheet("color: white; font-size: 20px; font-weight: bold;")
+        title.setStyleSheet("color: white; font-size: 24px; font-weight: bold;")
         title_layout.addWidget(title)
         
         title_layout.addStretch()

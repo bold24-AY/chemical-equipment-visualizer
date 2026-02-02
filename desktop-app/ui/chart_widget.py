@@ -42,9 +42,9 @@ class ChartWidget(QWidget):
         self.figure.clear()
         
         # Grid layout: 2 rows
-        # Row 1: Bar and Pie (side by side)
+        # Row 1: Bar and Pie (side by side, pie gets more width)
         # Row 2: Line Chart (full width)
-        gs = self.figure.add_gridspec(2, 2, height_ratios=[1, 1])
+        gs = self.figure.add_gridspec(2, 2, height_ratios=[1, 1], width_ratios=[1, 1.5])
         
         # Ax1: Bar Chart (Top Left)
         ax1 = self.figure.add_subplot(gs[0, 0])
@@ -79,11 +79,25 @@ class ChartWidget(QWidget):
         type_dist = summary['type_distribution']
         labels = list(type_dist.keys())
         sizes = list(type_dist.values())
-        colors_pie = ['#1a5490', '#2ecc71', '#EF4444', '#f39c12', '#9b59b6', '#3498db']
+        colors_pie = [
+            '#FF5733', # Red-Orange
+            '#33FF57', # Green
+            '#3357FF', # Blue
+            '#FF33F6', # Magenta
+            '#F6FF33', # Yellow
+            '#33FFF6', # Cyan
+            '#FF8F33', # Orange
+            '#8F33FF', # Purple
+            '#FF338F', # Pink
+            '#33FF8F', # Mint
+            '#581845', # Dark Purple
+            '#900C3F'  # Dark Red
+        ]
         
         wedges, texts, autotexts = ax2.pie(sizes, autopct='%1.1f%%', startangle=90,
-               colors=colors_pie[:len(labels)], textprops={'fontsize': 9})
-        ax2.legend(wedges, labels, title="Equipment Types", loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
+               colors=colors_pie[:len(labels)], textprops={'fontsize': 9}, radius=1.2)
+        # Move legend outside but without a massive bounding box that shrinks the chart
+        ax2.legend(wedges, labels, title="Equipment Types", loc="center left", bbox_to_anchor=(1, 0.5))
         ax2.set_title('Equipment Distribution', fontsize=12, fontweight='bold', pad=10)
         ax2.axis('equal')
         
