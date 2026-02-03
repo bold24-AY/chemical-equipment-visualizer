@@ -415,11 +415,12 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
         
         self.history_table = QTableWidget()
-        self.history_table.setColumnCount(3)
-        self.history_table.setHorizontalHeaderLabels(['Filename', 'Uploaded At', 'Items'])
+        self.history_table.setColumnCount(4)
+        self.history_table.setHorizontalHeaderLabels(['Filename', 'Uploaded At', 'Items', 'Action'])
         self.history_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
         self.history_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
         self.history_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        self.history_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
         self.history_table.setAlternatingRowColors(True)
         
         layout.addWidget(self.history_table)
@@ -427,6 +428,10 @@ class MainWindow(QMainWindow):
         return widget
     
 
+    
+    def on_download_history(self, dataset_id):
+        """Wrapper for download button click."""
+        self.download_report(dataset_id)
     
     def load_data(self):
         """Load latest dataset from backend."""
@@ -492,35 +497,55 @@ class MainWindow(QMainWindow):
             # Items
             count = item['summary']['total_equipment']
             self.history_table.setItem(i, 2, QTableWidgetItem(str(count)))
+            
+            # Action Button
+            download_btn = QPushButton("Download PDF")
+            download_btn.setStyleSheet("padding: 5px; font-size: 11px;")
+            # Use partial or lambda with default arg to capture current item id
+            # lambda checked=False, id=item['id']: self.on_download_history(id)
+            download_btn.clicked.connect(lambda checked=False, id=item['id']: self.on_download_history(id))
+            
+            # Create a container widget to center the button if needed, or just set cell widget
+            # To center, we usually need a layout.
+            btn_container = QWidget()
+            btn_layout = QHBoxLayout(btn_container)
+            btn_layout.setContentsMargins(2, 2, 2, 2)
+            btn_layout.addWidget(download_btn)
+            btn_layout.setAlignment(Qt.AlignCenter)
+            
+            self.history_table.setCellWidget(i, 3, btn_container)
     
     def on_upload_success(self):
         """Handle successful upload."""
         self.load_data()
         self.tabs.setCurrentIndex(1)  # Switch to dashboard
     
-    def download_report(self):
+    def download_report(self, dataset_id=None):
         """Download PDF report."""
-        if not self.current_dataset:
+        if not dataset_id and not self.current_dataset:
             QMessageBox.warning(
                 self,
                 "No Data",
                 "Please upload a dataset first."
             )
             return
+
+        target_id = dataset_id if dataset_id else self.current_dataset['id']
+
         
         try:
             # Ask user where to save
             file_path, _ = QFileDialog.getSaveFileName(
                 self,
                 "Save Report",
-                f"equipment_report_{self.current_dataset['id']}.pdf",
+                f"equipment_report_{target_id}.pdf",
                 "PDF Files (*.pdf)"
             )
             
             if file_path:
                 self.statusBar.showMessage("Generating report...")
                 self.api_client.download_report(
-                    self.current_dataset['id'],
+                    target_id,
                     file_path
                 )
                 self.statusBar.showMessage(f"Report saved: {file_path}")

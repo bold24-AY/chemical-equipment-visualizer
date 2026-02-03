@@ -212,9 +212,10 @@ function App() {
                     <div className="history-actions">
                       <button
                         onClick={() => downloadReport(dataset.id)}
-                        className="btn-secondary"
+                        className="btn-primary"
+                        style={{ width: 'auto', padding: '0.5rem 1rem' }}
                       >
-                        Download Report
+                        Download PDF
                       </button>
                     </div>
                   </div>

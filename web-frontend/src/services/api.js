@@ -13,13 +13,13 @@ axios.defaults.xsrfHeaderName = 'X-CSRFToken';
 export const uploadCSV = async (file) => {
   const formData = new FormData();
   formData.append('file', file);
-  
+
   const response = await axios.post(`${API_BASE_URL}/upload/`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
   });
-  
+
   return response.data;
 };
 
@@ -51,24 +51,62 @@ export const getDataset = async (datasetId) => {
  * Download PDF report
  */
 export const downloadReport = async (datasetId = null) => {
-  const url = datasetId 
-    ? `${API_BASE_URL}/report/${datasetId}/`
-    : `${API_BASE_URL}/report/`;
-  
-  const response = await axios.get(url, {
-    responseType: 'blob',
-  });
-  
-  // Create download link
-  const blob = new Blob([response.data], { type: 'application/pdf' });
-  const downloadUrl = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = downloadUrl;
-  link.download = `equipment_report_${datasetId || 'latest'}.pdf`;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  window.URL.revokeObjectURL(downloadUrl);
+  try {
+    const url = datasetId
+      ? `${API_BASE_URL}/report/${datasetId}/`
+      : `${API_BASE_URL}/report/`;
+
+    console.log(`Downloading report for datasetId: ${datasetId || 'latest'}`);
+
+    const response = await axios.get(url, {
+      responseType: 'blob',
+    });
+
+    // Check if response is actually a JSON error masquerading as a blob
+    if (response.data.type === 'application/json') {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const errorData = JSON.parse(reader.result);
+          console.error("PDF Download Error (JSON):", errorData);
+          alert(`Failed to download PDF: ${errorData.error || 'Unknown server error'}`);
+        } catch (e) {
+          alert('Failed to download PDF: Server returned an error.');
+        }
+      };
+      reader.readAsText(response.data);
+      return;
+    }
+
+    // Create download link
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = `equipment_report_${datasetId || 'latest'}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(downloadUrl);
+
+  } catch (error) {
+    console.error("PDF Download Error:", error);
+    if (error.response && error.response.data instanceof Blob) {
+      // Try to read blob error
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const errorData = JSON.parse(reader.result);
+          alert(`Error: ${errorData.error || error.message}`);
+        } catch (e) {
+          alert(`Error: ${error.message}`);
+        }
+      };
+      reader.readAsText(error.response.data);
+    } else {
+      alert(`Failed to download report: ${error.message}`);
+    }
+  }
 };
 
 export default {
